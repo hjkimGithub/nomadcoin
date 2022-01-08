@@ -10,7 +10,7 @@ import (
 	"github.com/hjkimGithub/nomadcoin/utils"
 )
 
-const port string = ":4000"
+var port string
 
 type url string
 
@@ -69,7 +69,8 @@ func blocks(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Start() {
+func Start(aPort int) {
+	port := fmt.Sprintf(":%d", aPort)
 	http.HandleFunc("/", documentation)
 	http.HandleFunc("/blocks", blocks)
 	fmt.Printf("Listening on http://localhost%s\n", port)
