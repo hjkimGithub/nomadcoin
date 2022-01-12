@@ -43,6 +43,11 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			Description: "See Documentation",
 		},
 		{
+			URL:         url("/status"),
+			Method:      "GET",
+			Description: "See the status of the Blockchain",
+		},
+		{
 			URL:         url("/blocks"),
 			Method:      "POST",
 			Description: "Add a Block",
@@ -57,13 +62,13 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 	// b, err := json.Marshal(data)
 	// utils.HandleErr(err)
 	// fmt.Fprintf(rw, "%s", b)
-	json.NewEncoder(rw).Encode(data)
+	utils.HandleErr(json.NewEncoder(rw).Encode(data))
 }
 
 func blocks(rw http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		json.NewEncoder(rw).Encode(blockchain.BlockChain().Blocks())
+		utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.BlockChain().Blocks()))
 	case "POST":
 		var addBlockBody addBlockBody
 		utils.HandleErr(json.NewDecoder(r.Body).Decode(&addBlockBody))
@@ -78,10 +83,14 @@ func block(rw http.ResponseWriter, r *http.Request) {
 	block, err := blockchain.FindBlock(hash)
 	encoder := json.NewEncoder(rw)
 	if err == blockchain.ErrNotFound {
-		encoder.Encode(errorResponse{fmt.Sprint(err)})
+		utils.HandleErr(encoder.Encode(errorResponse{fmt.Sprint(err)}))
 	} else {
-		encoder.Encode(block)
+		utils.HandleErr(encoder.Encode(block))
 	}
+}
+
+func status(rw http.ResponseWriter, r *http.Request) {
+	utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.BlockChain()))
 }
 
 func jsonContentTypeMiddleware(next http.Handler) http.Handler {
@@ -97,8 +106,8 @@ func Start(aPort int) {
 	handler.Use(jsonContentTypeMiddleware)
 	port := fmt.Sprintf(":%d", aPort)
 	handler.HandleFunc("/", documentation).Methods("GET")
+	handler.HandleFunc("/status", status)
 	handler.HandleFunc("/blocks", blocks).Methods("GET", "POST")
-	// handler.HandleFunc("/blocks/{height: [0-9]+}", block).Methods("GET")
 	handler.HandleFunc("/blocks/{hash:[a-f0-9]+}", block).Methods("GET")
 	fmt.Printf("Listening on http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, handler))
