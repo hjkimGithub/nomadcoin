@@ -22,6 +22,11 @@ type urlDescription struct {
 	Payload     string `json:"payload,omitempty"`
 }
 
+type balanceResponse struct {
+	Address string `json:"address"`
+	Balance int    `json:"balance"`
+}
+
 func (u url) MarshalText() ([]byte, error) {
 	url := fmt.Sprintf("http://localhost%s%s", port, u)
 	return []byte(url), nil
@@ -102,7 +107,15 @@ func jsonContentTypeMiddleware(next http.Handler) http.Handler {
 func balance(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	address := vars["address"]
-	utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.BlockChain().TxOutsByAddress(address)))
+	total := r.URL.Query().Get("total")
+	switch total {
+	case "true":
+		amount := blockchain.BlockChain().BalaceByAddress(address)
+		json.NewEncoder(rw).Encode(balanceResponse{address, amount})
+	default:
+		utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.BlockChain().TxOutsByAddress(address)))
+	}
+
 }
 
 func Start(aPort int) {

@@ -101,6 +101,15 @@ func (b *blockchain) TxOutsByAddress(address string) []*TxOut {
 	return ownedTxOuts
 }
 
+func (b *blockchain) BalaceByAddress(address string) int {
+	txOuts := b.TxOutsByAddress(address)
+	var amount int
+	for _, txOut := range txOuts {
+		amount += txOut.Amount
+	}
+	return amount
+}
+
 func BlockChain() *blockchain {
 	if b == nil {
 		once.Do(func() {
