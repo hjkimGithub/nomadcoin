@@ -27,10 +27,6 @@ func (u url) MarshalText() ([]byte, error) {
 	return []byte(url), nil
 }
 
-type addBlockBody struct {
-	Message string
-}
-
 type errorResponse struct {
 	ErrorMessage string `json:"error"`
 }
@@ -58,6 +54,11 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			Method:      "GET",
 			Description: "See a Block",
 		},
+		{
+			URL:         url("/balance/{address}"),
+			Method:      "GET",
+			Description: "Get TxOuts for an address",
+		},
 	}
 	// b, err := json.Marshal(data)
 	// utils.HandleErr(err)
@@ -70,9 +71,7 @@ func blocks(rw http.ResponseWriter, r *http.Request) {
 	case "GET":
 		utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.BlockChain().Blocks()))
 	case "POST":
-		var addBlockBody addBlockBody
-		utils.HandleErr(json.NewDecoder(r.Body).Decode(&addBlockBody))
-		blockchain.BlockChain().AddBlock(addBlockBody.Message)
+		blockchain.BlockChain().AddBlock()
 		rw.WriteHeader(http.StatusCreated)
 	}
 }
@@ -100,6 +99,12 @@ func jsonContentTypeMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func balance(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	address := vars["address"]
+	utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.BlockChain().TxOutsByAddress(address)))
+}
+
 func Start(aPort int) {
 	// handler := http.NewServeMux()
 	handler := mux.NewRouter()
@@ -109,6 +114,7 @@ func Start(aPort int) {
 	handler.HandleFunc("/status", status)
 	handler.HandleFunc("/blocks", blocks).Methods("GET", "POST")
 	handler.HandleFunc("/blocks/{hash:[a-f0-9]+}", block).Methods("GET")
+	handler.HandleFunc("/balance/{address}", balance)
 	fmt.Printf("Listening on http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, handler))
 }
