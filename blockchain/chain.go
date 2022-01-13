@@ -1,7 +1,6 @@
 package blockchain
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/hjkimGithub/nomadcoin/db"
@@ -124,6 +123,6 @@ func BlockChain() *blockchain {
 			}
 		})
 	}
-	fmt.Println(b.NewestHash)
+	// fmt.Println(b.NewestHash)
 	return b
 }
