@@ -5,6 +5,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/x509"
+	"fmt"
 	"os"
 
 	"github.com/hjkimGithub/nomadcoin/utils"
@@ -16,6 +17,7 @@ const (
 
 type wallet struct {
 	privateKey *ecdsa.PrivateKey
+	Address    string
 }
 
 var w *wallet
@@ -47,6 +49,11 @@ func restoreKey() (key *ecdsa.PrivateKey) {
 	return
 }
 
+func aFromK(key *ecdsa.PrivateKey) string {
+	z := append(key.X.Bytes(), key.Y.Bytes()...)
+	return fmt.Sprintf("%x", z)
+}
+
 func Wallet() *wallet {
 	if w == nil {
 		w = &wallet{}
@@ -57,6 +64,7 @@ func Wallet() *wallet {
 			persistKey(key)
 			w.privateKey = key
 		}
+		w.Address = aFromK(w.privateKey)
 	}
 	return w
 }
