@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hjkimGithub/nomadcoin/blockchain"
 	"github.com/hjkimGithub/nomadcoin/utils"
+	"github.com/hjkimGithub/nomadcoin/wallet"
 )
 
 var port string
@@ -25,6 +26,10 @@ type urlDescription struct {
 type balanceResponse struct {
 	Address string `json:"address"`
 	Balance int    `json:"balance"`
+}
+
+type myWalletResponse struct {
+	Address string `json:"address"`
 }
 
 func (u url) MarshalText() ([]byte, error) {
@@ -79,7 +84,7 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 func blocks(rw http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.BlockChain()))
+		utils.HandleErr(json.NewEncoder(rw).Encode(blockchain.Blocks(blockchain.BlockChain())))
 	case "POST":
 		blockchain.BlockChain().AddBlock()
 		rw.WriteHeader(http.StatusCreated)
@@ -131,9 +136,17 @@ func transactions(rw http.ResponseWriter, r *http.Request) {
 	utils.HandleErr(json.NewDecoder(r.Body).Decode(&payload))
 	err := blockchain.Mempool.AddTx(payload.To, payload.Amount)
 	if err != nil {
-		json.NewEncoder(rw).Encode(errorResponse{"NOT ENOUGH MONEY"})
+		rw.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(rw).Encode(errorResponse{err.Error()})
+		return
 	}
 	rw.WriteHeader(http.StatusCreated)
+}
+
+func myWallet(rw http.ResponseWriter, r *http.Request) {
+	address := wallet.Wallet().Address
+	json.NewEncoder(rw).Encode(myWalletResponse{Address: address})
+	// json.NewEncoder(rw).Encode(struct{ Address string }{Address: address})
 }
 
 func Start(aPort int) {
@@ -146,7 +159,8 @@ func Start(aPort int) {
 	handler.HandleFunc("/blocks", blocks).Methods("GET", "POST")
 	handler.HandleFunc("/blocks/{hash:[a-f0-9]+}", block).Methods("GET")
 	handler.HandleFunc("/balance/{address}", balance)
-	handler.HandleFunc("/mempool", mempool)
+	handler.HandleFunc("/mempool", mempool).Methods("GET")
+	handler.HandleFunc("/wallet", myWallet).Methods("GET")
 	handler.HandleFunc("/transactions", transactions).Methods("POST")
 	fmt.Printf("Listening on http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, handler))
