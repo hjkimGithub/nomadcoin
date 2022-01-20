@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/hjkimGithub/nomadcoin/blockchain"
+	"github.com/hjkimGithub/nomadcoin/p2p"
 	"github.com/hjkimGithub/nomadcoin/utils"
 	"github.com/hjkimGithub/nomadcoin/wallet"
 )
@@ -74,6 +75,11 @@ func documentation(rw http.ResponseWriter, r *http.Request) {
 			Method:      "GET",
 			Description: "Get TxOuts for an address",
 		},
+		{
+			URL:         url("/ws"),
+			Method:      "GET",
+			Description: "Upgrade to WebSockets",
+		},
 	}
 	// b, err := json.Marshal(data)
 	// utils.HandleErr(err)
@@ -110,6 +116,13 @@ func status(rw http.ResponseWriter, r *http.Request) {
 func jsonContentTypeMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Add("Content-Type", "application/json")
+		next.ServeHTTP(rw, r)
+	})
+}
+
+func loggerMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.RequestURI)
 		next.ServeHTTP(rw, r)
 	})
 }
@@ -152,7 +165,7 @@ func myWallet(rw http.ResponseWriter, r *http.Request) {
 func Start(aPort int) {
 	// handler := http.NewServeMux()
 	handler := mux.NewRouter()
-	handler.Use(jsonContentTypeMiddleware)
+	handler.Use(jsonContentTypeMiddleware, loggerMiddleware)
 	port := fmt.Sprintf(":%d", aPort)
 	handler.HandleFunc("/", documentation).Methods("GET")
 	handler.HandleFunc("/status", status)
@@ -162,6 +175,7 @@ func Start(aPort int) {
 	handler.HandleFunc("/mempool", mempool).Methods("GET")
 	handler.HandleFunc("/wallet", myWallet).Methods("GET")
 	handler.HandleFunc("/transactions", transactions).Methods("POST")
+	handler.HandleFunc("/ws", p2p.Upgrade).Methods("GET")
 	fmt.Printf("Listening on http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, handler))
 }
