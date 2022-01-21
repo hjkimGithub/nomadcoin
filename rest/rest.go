@@ -43,8 +43,12 @@ type errorResponse struct {
 }
 
 type addTxPayload struct {
-	To     string `json: "to"`
-	Amount int    `json: "amount"`
+	To     string `json:"to"`
+	Amount int    `json:"amount"`
+}
+
+type addPeerPayload struct {
+	Address, Port string
 }
 
 func documentation(rw http.ResponseWriter, r *http.Request) {
@@ -162,11 +166,23 @@ func myWallet(rw http.ResponseWriter, r *http.Request) {
 	// json.NewEncoder(rw).Encode(struct{ Address string }{Address: address})
 }
 
+func peers(rw http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "POST":
+		var payload addPeerPayload
+		json.NewDecoder(r.Body).Decode(&payload)
+		p2p.AddPeer(payload.Address, payload.Port, port)
+		rw.WriteHeader(http.StatusOK)
+	case "GET":
+		json.NewEncoder(rw).Encode(p2p.Peers)
+	}
+}
+
 func Start(aPort int) {
 	// handler := http.NewServeMux()
 	handler := mux.NewRouter()
 	handler.Use(jsonContentTypeMiddleware, loggerMiddleware)
-	port := fmt.Sprintf(":%d", aPort)
+	port = fmt.Sprintf(":%d", aPort)
 	handler.HandleFunc("/", documentation).Methods("GET")
 	handler.HandleFunc("/status", status)
 	handler.HandleFunc("/blocks", blocks).Methods("GET", "POST")
@@ -176,6 +192,7 @@ func Start(aPort int) {
 	handler.HandleFunc("/wallet", myWallet).Methods("GET")
 	handler.HandleFunc("/transactions", transactions).Methods("POST")
 	handler.HandleFunc("/ws", p2p.Upgrade).Methods("GET")
+	handler.HandleFunc("/peers", peers).Methods("GET", "POST")
 	fmt.Printf("Listening on http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, handler))
 }

@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"runtime"
 
 	"github.com/hjkimGithub/nomadcoin/explorer"
 	"github.com/hjkimGithub/nomadcoin/rest"
@@ -15,7 +14,7 @@ func usage() {
 	fmt.Printf("Please use the following commands\n")
 	fmt.Printf("-port:	Set Port(default: 4000)\n")
 	fmt.Printf("-mode:	Set mode(Option: 'html' or 'rest' or 'both'\n\n")
-	runtime.Goexit()
+	os.Exit(0)
 }
 
 func Start() {
