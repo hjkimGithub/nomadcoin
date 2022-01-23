@@ -1,6 +1,9 @@
 package p2p
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/hjkimGithub/nomadcoin/blockchain"
 	"github.com/hjkimGithub/nomadcoin/utils"
 )
@@ -31,4 +34,14 @@ func sendNewestBlock(p *peer) {
 	utils.HandleErr(err)
 	m := makeMessage(MessageNewestBlock, b)
 	p.inbox <- m
+}
+
+func handleMsg(m *Message, p *peer) {
+	// fmt.Printf("Peer: %s, Sent a message with kind of: %d", p.key, m.Kind)
+	switch m.Kind {
+	case MessageNewestBlock:
+		var payload blockchain.Block
+		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
+		fmt.Println(payload)
+	}
 }
