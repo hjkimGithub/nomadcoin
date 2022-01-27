@@ -21,18 +21,39 @@ func makeTestWallet() *wallet {
 	return w
 }
 
-func TestVerify(t *testing.T) {
-	// privKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	// b, _ := x509.MarshalECPrivateKey(privKey)
-	// t.Logf("%x", b)
-
-}
-
 func TestSign(t *testing.T) {
 	s := Sign(testPayload, makeTestWallet())
 	// t.Log(s)
 	_, err := hex.DecodeString(s)
 	if err != nil {
 		t.Errorf("Sign() should return a hex encoded string, got %s", s)
+	}
+}
+
+func TestVerify(t *testing.T) {
+	// privKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	// b, _ := x509.MarshalECPrivateKey(privKey)
+	// t.Logf("%x", b)
+	type test struct {
+		Input string
+		ok    bool
+	}
+	tests := []test{
+		{testPayload, true},
+		{"00a94a368875d47544f26a5fc660512198a5660ef51465049d2fa60ad4e2450f", false},
+	}
+	for _, tc := range tests {
+		w := makeTestWallet()
+		ok := Verify(testSig, tc.Input, w.Address)
+		if ok != tc.ok {
+			t.Error("Verify() could not verify testSignature and testPayload")
+		}
+	}
+}
+
+func TestRestoreBigInts(t *testing.T) {
+	_, _, err := restoreBigInts("x")
+	if err == nil {
+		t.Error("restoreBigInts should return error when payload is not hex.")
 	}
 }
