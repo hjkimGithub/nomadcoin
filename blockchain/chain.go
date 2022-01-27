@@ -31,7 +31,7 @@ func (b *blockchain) restore(data []byte) {
 }
 
 func persistBlockchain(b *blockchain) {
-	db.SaveBlockchain(utils.ToByetes(b))
+	db.SaveBlockchain(utils.ToBytes(b))
 }
 
 func (b *blockchain) AddBlock() *Block {

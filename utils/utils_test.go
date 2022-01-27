@@ -36,7 +36,7 @@ func ExampleHash() {
 
 func TestToBytes(t *testing.T) {
 	s := "test"
-	b := ToByetes(s)
+	b := ToBytes(s)
 	k := reflect.TypeOf(b).Kind()
 	if k != reflect.Slice {
 		t.Errorf("ToBytes should return a slice of bytes got %s", k)
@@ -79,3 +79,5 @@ func TestHandleErr(t *testing.T) {
 		t.Error("HandleErr should call fn")
 	}
 }
+
+func TestFromBytes
