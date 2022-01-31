@@ -147,7 +147,7 @@ func BalaceByAddress(address string, b *blockchain) int {
 	return amount
 }
 
-func BlockChain() *blockchain {
+func Blockchain() *blockchain {
 	once.Do(func() {
 		b = &blockchain{
 			Height: 0,

@@ -35,7 +35,7 @@ func makeMessage(kind MessageKind, payload interface{}) []byte {
 
 func sendNewestBlock(p *peer) {
 	fmt.Printf("Sending newest block to %s\n", p.key)
-	b, err := blockchain.FindBlock(blockchain.BlockChain().NewestHash)
+	b, err := blockchain.FindBlock(blockchain.Blockchain().NewestHash)
 	utils.HandleErr(err)
 	m := makeMessage(MessageNewestBlock, b)
 	p.inbox <- m
@@ -47,7 +47,7 @@ func requestAllBlocks(p *peer) {
 }
 
 func sendAllBlocks(p *peer) {
-	m := makeMessage(MessageAllBlocksResponse, blockchain.Blocks(blockchain.BlockChain()))
+	m := makeMessage(MessageAllBlocksResponse, blockchain.Blocks(blockchain.Blockchain()))
 	p.inbox <- m
 }
 
@@ -74,7 +74,7 @@ func handleMsg(m *Message, p *peer) {
 		var payload blockchain.Block
 		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
 		// fmt.Println(payload)
-		b, err := blockchain.FindBlock(blockchain.BlockChain().NewestHash)
+		b, err := blockchain.FindBlock(blockchain.Blockchain().NewestHash)
 		utils.HandleErr(err)
 		if payload.Height >= b.Height {
 			fmt.Printf("Requesting all blocks from %s\n", p.key)
@@ -89,11 +89,11 @@ func handleMsg(m *Message, p *peer) {
 		fmt.Printf("Received all the blocks from %s\n", p.key)
 		var payload []*blockchain.Block
 		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
-		blockchain.BlockChain().Replace(payload)
+		blockchain.Blockchain().Replace(payload)
 	case MessageNewBlockNotify:
 		var payload *blockchain.Block
 		utils.HandleErr(json.Unmarshal(m.Payload, &payload))
-		blockchain.BlockChain().AddPeerBlock(payload)
+		blockchain.Blockchain().AddPeerBlock(payload)
 	case MessageNewTxNotify:
 		var payload *blockchain.Tx
 		utils.HandleErr(json.Unmarshal(m.Payload, &payload))

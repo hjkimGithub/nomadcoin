@@ -67,7 +67,7 @@ func (t *Tx) sign() {
 func validate(tx *Tx) bool {
 	valid := true
 	for _, txIn := range tx.TxIns {
-		prevTx := FindTx(BlockChain(), txIn.TxID)
+		prevTx := FindTx(Blockchain(), txIn.TxID)
 		if prevTx == nil {
 			valid = false
 			break
@@ -115,13 +115,13 @@ var ErrorNoMoney = errors.New("NOT ENOUGH MONEY")
 var ErrorNotValid = errors.New("TX INVALID")
 
 func makeTx(from, to string, amount int) (*Tx, error) {
-	if BalaceByAddress(from, BlockChain()) < amount {
+	if BalaceByAddress(from, Blockchain()) < amount {
 		return nil, ErrorNoMoney
 	}
 	var txOuts []*TxOut
 	var txIns []*TxIn
 	total := 0
-	UTxOuts := UTxOutsByAddress(from, BlockChain())
+	UTxOuts := UTxOutsByAddress(from, Blockchain())
 	for _, uTxOut := range UTxOuts {
 		if total >= amount {
 			break

@@ -21,7 +21,7 @@ type homeData struct {
 }
 
 func home(rw http.ResponseWriter, r *http.Request) {
-	data := homeData{"Home", blockchain.Blocks(blockchain.BlockChain())}
+	data := homeData{"Home", blockchain.Blocks(blockchain.Blockchain())}
 	templates.ExecuteTemplate(rw, "home", data)
 }
 
@@ -31,7 +31,7 @@ func add(rw http.ResponseWriter, r *http.Request) {
 		templates.ExecuteTemplate(rw, "add", nil)
 	case "POST":
 		r.ParseForm()
-		blockchain.BlockChain().AddBlock()
+		blockchain.Blockchain().AddBlock()
 		http.Redirect(rw, r, "/", http.StatusPermanentRedirect)
 	}
 }
